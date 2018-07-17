@@ -493,6 +493,9 @@ function codePushify(options = {}) {
           if (options.checkFrequency === CodePush.CheckFrequency.ON_APP_RESUME) {
             ReactNative.AppState.addEventListener("change", (newState) => {
               if(newState === "active") {
+                 if(options.disableInDEV && __DEV__) {
+                    return
+                 }
                  if(!options.canUpdateOnAppResume || (options.canUpdateOnAppResume && options.canUpdateOnAppResume())) {
                     CodePush.sync(options, syncStatusCallback, downloadProgressCallback);
                  }
