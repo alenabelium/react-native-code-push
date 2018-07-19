@@ -423,7 +423,12 @@ async function syncInternal(options = {}, syncStatusChangeCallback, downloadProg
         }
 
         syncStatusChangeCallback(CodePush.SyncStatus.AWAITING_USER_ACTION);
-        Alert.alert(syncOptions.updateDialog.title, message, dialogButtons);
+        if(syncOptions.forceInstallOnStart) {
+          doDownloadAndInstall()
+            .then(resolve, reject);
+        } else {
+            Alert.alert(syncOptions.updateDialog.title, message, dialogButtons);
+        }
       });
     } else {
       return await doDownloadAndInstall();
