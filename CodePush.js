@@ -405,8 +405,8 @@ async function syncInternal(options = {}, syncStatusChangeCallback, downloadProg
             }
           });
         }
-        
-        // Since the install button should be placed to the 
+
+        // Since the install button should be placed to the
         // right of any other button, add it last
         dialogButtons.push({
           text: installButtonText,
@@ -423,7 +423,12 @@ async function syncInternal(options = {}, syncStatusChangeCallback, downloadProg
         }
 
         syncStatusChangeCallback(CodePush.SyncStatus.AWAITING_USER_ACTION);
-        Alert.alert(syncOptions.updateDialog.title, message, dialogButtons);
+        if(syncOptions.forceInstallOnStart) {
+          doDownloadAndInstall()
+            .then(resolve, reject);
+        } else {
+            Alert.alert(syncOptions.updateDialog.title, message, dialogButtons);
+        }
       });
     } else {
       return await doDownloadAndInstall();
@@ -488,11 +493,19 @@ function codePushify(options = {}) {
               handleBinaryVersionMismatchCallback = handleBinaryVersionMismatchCallback.bind(rootComponentInstance);
             }
           }
-
-          CodePush.sync(options, syncStatusCallback, downloadProgressCallback, handleBinaryVersionMismatchCallback);
+          if(!(options.disableInDEV && __DEV__)) {
+              CodePush.sync(options, syncStatusCallback, downloadProgressCallback, handleBinaryVersionMismatchCallback);
+          }
           if (options.checkFrequency === CodePush.CheckFrequency.ON_APP_RESUME) {
             ReactNative.AppState.addEventListener("change", (newState) => {
-              newState === "active" && CodePush.sync(options, syncStatusCallback, downloadProgressCallback);
+              if(newState === "active") {
+                 if(options.disableInDEV && __DEV__) {
+                    return
+                 }
+                 if(!options.canUpdateOnAppResume || (options.canUpdateOnAppResume && options.canUpdateOnAppResume())) {
+                    CodePush.sync(options, syncStatusCallback, downloadProgressCallback);
+                 }
+              }
             });
           }
         }
